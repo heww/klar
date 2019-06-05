@@ -129,11 +129,17 @@ var tokenRe = regexp.MustCompile(`Bearer realm="(.*?)",service="(.*?)",scope="(.
 // NewImage parses image name which could be the ful name registry:port/name:tag
 // or in any other shorter forms and creates docker image entity without
 // information about layers
-func NewImage(conf *Config) (*Image, error) {
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: conf.InsecureTLS},
-		Proxy:           http.ProxyFromEnvironment,
+func NewImage(conf *Config, rts ...http.RoundTripper) (*Image, error) {
+	var tr http.RoundTripper
+	if len(rts) > 0 {
+		tr = rts[0]
+	} else {
+		tr = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: conf.InsecureTLS},
+			Proxy:           http.ProxyFromEnvironment,
+		}
 	}
+
 	client := http.Client{
 		Transport: tr,
 		Timeout:   conf.Timeout,
